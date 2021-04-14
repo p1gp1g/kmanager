@@ -10,23 +10,15 @@ EOF
 exit 0
 }
 
-bak() {
-	if [ -f $1.bak ]; then
-		qemu-img commit $1
-	else
-		mv $1 $1.bak
-		qemu-img -f qcow2 -F qcow2 -b $1.bak $1
-	fi
-}
-
 run_update() {
 	kcreate update || exit 1
 	virsh start update || exit 1
-	ssh update dnf update -y || exit 1
+	ssh update sudo dnf update -y || exit 1
 	echo -n "Commit changes ? (y/n) "
 	read commit
 	case commit in
 		y|Y)
+			qemu-img commit "$TEMPLATE_DIR/$SYS_TEMPLATE"
 			qemu-img commit $SYS_DIR/update.qcow2
 		;;
 		*)
@@ -56,6 +48,6 @@ esac
 
 NEW="$SYS_DIR/$2.qcow2"
 [ -f "$NEW" ] || usage
-bak "$TEMPLATE"
-qemu-img commit $NEW
+qemu-img commit "$TEMPLATE"
+qemu-img commit "$NEW"
 

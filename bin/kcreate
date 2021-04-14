@@ -45,3 +45,6 @@ Host $VM
 	Port $PORT
 
 EOF
+
+sed -i '/\[127.0.0.1\]:'$PORT'/d' ~/.ssh/known_hosts
+
