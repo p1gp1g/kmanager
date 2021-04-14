@@ -1,0 +1,19 @@
+#!/bin/bash
+
+[ $# -ne 1 ] && echo "Usage: $0 <domain>" && exit 1
+
+source __CONF__
+
+VM=$1
+
+## rm images
+rm "$SYS_DIR/$VM.qcow2"
+rm "$RW_DIR/$VM.qcow2"
+
+## rm VM
+virsh undefine $VM
+
+## clean db
+sqlite3 $DB "DELETE FROM vms WHERE name='$VM';"
+
+sed -i -e '/^Host '"$VM"'$/,/^$/d' ~/.ssh/config

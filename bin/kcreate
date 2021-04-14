@@ -1,0 +1,47 @@
+#!/bin/bash
+
+[ $# -ne 1 ] && echo "Usage: $0 <domain>" && exit 1
+
+source __CONF__
+
+VM=$1
+
+virsh list --all --name | grep "^$VM$" && echo "already exists" && exit 1
+
+tmpfile=$(mktemp)
+
+## Create images
+qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$SYS_TEMPLATE" "$SYS_DIR/$VM.qcow2" || exit 1
+qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$RW_TEMPLATE" "$RW_DIR/$VM.qcow2" || exit 1
+
+## Get Port
+PORT=$(sqlite3 $DB "SELECT MAX(port) FROM vms;")
+let PORT++
+
+## Create VM
+virt-install --import --name $VM \
+--virt-type kvm \
+--memory 4096 --vcpus 8 --cpu host \
+--disk "$SYS_DIR/$VM.qcow2",format=qcow2,bus=virtio \
+--disk "$RW_DIR/$VM.qcow2",format=qcow2,bus=virtio \
+--os-type=linux \
+--os-variant=$OS_VARIANT \
+--graphics spice \
+--noautoconsole \
+--print-xml > $tmpfile || exit 1
+
+virsh define $tmpfile || exit 1
+
+virt-xml $VM --edit --qemu-commandline="-netdev user,id=$VM,hostfwd=tcp::$PORT-:22" || exit 1
+virt-xml $VM --edit --qemu-commandline="-device virtio-net-pci,netdev=$VM" || exit 1
+
+sqlite3 $DB "INSERT INTO vms(name,port) VALUES ('$VM',$PORT);" || exit 1
+
+cat << EOF >> ~/.ssh/config
+Host $VM
+	Hostname 127.0.0.1
+	IdentityFile ~/.ssh/$SSH_KEY
+	User user
+	Port $PORT
+
+EOF
