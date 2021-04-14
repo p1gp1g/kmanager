@@ -1,0 +1,61 @@
+#!/bin/bash
+
+source __CONF__
+
+usage() {
+cat <<EOF
+Usage: $0 sys [<vm>]
+       $0 rw <vm>
+EOF
+exit 0
+}
+
+bak() {
+	if [ -f $1.bak ]; then
+		qemu-img commit $1
+	else
+		mv $1 $1.bak
+		qemu-img -f qcow2 -F qcow2 -b $1.bak $1
+	fi
+}
+
+run_update() {
+	kcreate update || exit 1
+	virsh start update || exit 1
+	ssh update dnf update -y || exit 1
+	echo -n "Commit changes ? (y/n) "
+	read commit
+	case commit in
+		y|Y)
+			qemu-img commit $SYS_DIR/update.qcow2
+		;;
+		*)
+			echo "Aborted"
+		;;
+	esac
+	virsh shutdown update
+	kdelete update
+	exit 0
+}
+
+[ $# -lt 1 ] && usage
+
+case $1 in
+  s|sys)
+		[ -z "$2" ] && run_update
+		TEMPLATE="$TEMPLATE_DIR/$SYS_TEMPLATE"
+	;;
+	r|rw)
+		[ -z "$2" ] && usage
+		TEMPLATE="$TEMPLATE_DIR/$RW_TEMPLATE"
+	;;
+	*)
+		usage
+	;;
+esac
+
+NEW="$SYS_DIR/$2.qcow2"
+[ -f "$NEW" ] || usage
+bak "$TEMPLATE"
+qemu-img commit $NEW
+

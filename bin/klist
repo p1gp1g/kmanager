@@ -1,0 +1,6 @@
+#!/bin/bash
+
+source __CONF__
+
+sqlite3 $DB "SELECT name FROM vms;"
+
