@@ -34,10 +34,10 @@ pstep "Initiating ssh key"
 
 pstep "Create template volumes"
 # create template volumes
-qemu-img create -f qcow2 "$TEMPLATE_DIR/$RW_TEMPLATE.bak" 15G
-qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$RW_TEMPLATE.bak" "$TEMPLATE_DIR/$RW_TEMPLATE" 15G
-qemu-img create -f qcow2 "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" 15G
-qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" "$TEMPLATE_DIR/$SYS_TEMPLATE" 15G
+qemu-img create -f qcow2 "$TEMPLATE_DIR/$RW_TEMPLATE.bak" $RW_SIZE
+qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$RW_TEMPLATE.bak" "$TEMPLATE_DIR/$RW_TEMPLATE" $RW_SIZE
+qemu-img create -f qcow2 "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" $SYS_SIZE
+qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" "$TEMPLATE_DIR/$SYS_TEMPLATE" $SYS_SIZE
 
 pstep "Format rw template volume"
 # format rw volume

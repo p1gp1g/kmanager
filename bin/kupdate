@@ -10,6 +10,16 @@ EOF
 exit 0
 }
 
+# update old new
+update() {
+	qemu-img commit "$1"
+	qemu-img commit "$2"
+	rm $SYS_DIR/*
+	for name in $(sqlite3 $DB "SELECT name FROM vms;"); do
+		qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$SYS_TEMPLATE" "$SYS_DIR/$name.qcow2" $SYS_SIZE
+	done
+}
+
 run_update() {
 	kcreate update || exit 1
 	virsh start update || exit 1
@@ -18,8 +28,7 @@ run_update() {
 	read commit
 	case commit in
 		y|Y)
-			qemu-img commit "$TEMPLATE_DIR/$SYS_TEMPLATE"
-			qemu-img commit $SYS_DIR/update.qcow2
+			update "$TEMPLATE_DIR/$SYS_TEMPLATE" "$SYS_DIR/update.qcow2"
 		;;
 		*)
 			echo "Aborted"
@@ -48,6 +57,5 @@ esac
 
 NEW="$SYS_DIR/$2.qcow2"
 [ -f "$NEW" ] || usage
-qemu-img commit "$TEMPLATE"
-qemu-img commit "$NEW"
+update "$TEMPLATE" "$NEW"
 
