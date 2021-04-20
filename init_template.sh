@@ -20,16 +20,17 @@ virt-sysprep -d template-$OS_VARIANT \
   --append-line "/etc/fstab:UUID=$RW_UUID /home                       btrfs   subvol=home,compress=zstd:1 0 0" \
   --append-line "/etc/fstab:UUID=$RW_UUID /rw                         btrfs   subvol=rw,compress=zstd:1   0 0" \
   --append-line "/etc/rc.d/rc.local:#!/bin/bash" \
-  --append-line "/etc/rc.d/rc.local:[ -x /rw/rc.local ] && /rw/rc.local" \
+  --append-line "/etc/rc.d/rc.local:/usr/sbin/restorecon /home/user/.ssh/authorized_keys" \
   --append-line "/etc/rc.d/rc.local:/usr/bin/systemctl enable --now sshd #1del" \
-  --append-line "/etc/rc.d/rc.local:/usr/sbin/restorecon /home/user/.ssh/authorized_keys #1del" \
   --append-line "/etc/rc.d/rc.local:[ -f /rw/firstboot.sh ] && /bin/bash /rw/firstboot.sh && /usr/bin/rm /rw/firstboot.sh #1del" \
+  --append-line "/etc/rc.d/rc.local:[ -f /rw/rc.local ] && /bin/bash /rw/rc.local" \
   --append-line "/etc/rc.d/rc.local:sed -i '"'/#1del$/d'"' /etc/rc.d/rc.local #1del" \
 
 pstep "Undefining template-$OS_VARIANT"
-#virsh undefine template-$OS_VARIANT
+virsh undefine template-$OS_VARIANT
 
 pstep "Adding ssh authorized keys"
+SYS_TEMPLATE=$(sqlite3 $DB "SELECT name FROM templates ORDER BY id DESC LIMIT 1;")
 mkdir -p ./mnt_rw ./mnt_sys
 guestmount -a "$TEMPLATE_DIR/$RW_TEMPLATE" -m /dev/sda1 -o uid=$(id -u) -o gid=$(id -g) ./mnt_rw
 guestmount -a "$TEMPLATE_DIR/$SYS_TEMPLATE" -m /dev/sda2:/:subvol=home ./mnt_sys

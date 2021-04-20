@@ -17,30 +17,25 @@ cp kmanager.conf $CONF
 source $CONF
 
 pstep "Initiating directories"
-# init dirs
 mkdir -p "$SYS_DIR" "$RW_DIR" "$TEMPLATE_DIR"
 chattr -R +C "$SYS_DIR" "$RW_DIR" "$TEMPLATE_DIR" # disable CoW
 
-pstep "Initiating database"
-# init db
-sqlite3 $DB << EOF
-CREATE TABLE vms (id INTEGER PRIMARY KEY, name TEXT, port TEXT);
-INSERT INTO vms(name,port) values ("template-$OS_VARIANT",$FIRST_PORT);
-EOF
-
 pstep "Initiating ssh key"
-# init ssh key
 [ -f "$HOME/.ssh/$SSH_KEY" ] || ssh-keygen -t ed25519 -N "" "$HOME/.ssh/$SSH_KEY"
 
+pstep "Initiating database"
+SYS_TEMPLATE="template-$OS_VARIANT-$(date "+%Y-%m-%d_%H%M").qcow2"
+sqlite3 $DB << EOF
+CREATE TABLE vms (id INTEGER PRIMARY KEY, name TEXT, port TEXT);
+CREATE TABLE templates (id INTEGER PRIMARY KEY, name TEXT, date TEXT);
+INSERT INTO templates (name, date) VALUES ("$SYS_TEMPLATE","$(date)");
+EOF
+
 pstep "Create template volumes"
-# create template volumes
-qemu-img create -f qcow2 "$TEMPLATE_DIR/$RW_TEMPLATE.bak" $RW_SIZE
-qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$RW_TEMPLATE.bak" "$TEMPLATE_DIR/$RW_TEMPLATE" $RW_SIZE
-qemu-img create -f qcow2 "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" $SYS_SIZE
-qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$SYS_TEMPLATE.bak" "$TEMPLATE_DIR/$SYS_TEMPLATE" $SYS_SIZE
+qemu-img create -f qcow2 "$TEMPLATE_DIR/$RW_TEMPLATE" $RW_SIZE
+qemu-img create -f qcow2 "$TEMPLATE_DIR/$SYS_TEMPLATE" $SYS_SIZE
 
 pstep "Format rw template volume"
-# format rw volume
 virt-format --filesystem=btrfs -a "$TEMPLATE_DIR/$RW_TEMPLATE"
 guestfish -a "$TEMPLATE_DIR/$RW_TEMPLATE" << EOF
 run
@@ -50,7 +45,6 @@ btrfs-subvolume-create /rw
 EOF
 
 pstep "Create template VM"
-# create template VM
 virt-install --import --name template-$OS_VARIANT \
   --virt-type kvm \
   --memory 4096 --vcpus 8 --cpu host \
@@ -59,7 +53,7 @@ virt-install --import --name template-$OS_VARIANT \
   --os-type=linux \
   --os-variant=$OS_VARIANT \
   --graphics spice \
-  --noautoconsole
+  --noautoconsole || exit 1
 
 cat << EOF >&3
 [+] template-$OS_VARIANT has started, please install the OS on it.
