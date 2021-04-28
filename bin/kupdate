@@ -15,6 +15,10 @@ update() {
 	rm $SYS_DIR/*
 	for name in $(sqlite3 $DB "SELECT name FROM vms;"); do
 		qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/$NEW_TEMPLATE" "$SYS_DIR/$name.qcow2" $SYS_SIZE
+		TEMP=$(mktemp --suffix ".$name")
+		virsh dumpxml $name > $TEMP
+		sed -i '/^      <backingStore .*>/,/^      <\/backingStore>/d' $TEMP
+		virsh define $TEMP
 	done
 }
 
