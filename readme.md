@@ -1,3 +1,22 @@
+## Install
+
+1. edit install.conf
+1. run `install.sh`
+1. install you VM and do the 2 explained cmds
+1. run `init_template.sh`
+
+## Update
+
+```
+kupdate # create a VM, update and ask to merge
+kupdate <vm> # set the system of <vm> as the new template
+```
+
+## Install peristently
+
+* create a VM, install your bin, and `kupdate <the_vm>`
+or
+* write the file in a directory in /rw/ and bind the file with `mount --bind /rw/<dir> <dir>` in /rw/rc.local.
 
 ## Moving from qemu://session to qemu://system
 
