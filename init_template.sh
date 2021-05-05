@@ -34,7 +34,7 @@ SYS_TEMPLATE=$(sqlite3 $DB "SELECT name FROM templates ORDER BY id DESC LIMIT 1;
 mkdir -p ./mnt_rw ./mnt_sys
 guestmount -a "$TEMPLATE_DIR/$RW_TEMPLATE" -m /dev/sda1 -o uid=$(id -u) -o gid=$(id -g) ./mnt_rw
 guestmount -a "$TEMPLATE_DIR/$SYS_TEMPLATE" -m /dev/sda2:/:subvol=home ./mnt_sys
-cp -r ./mnt_sys/user ./mnt_rw/home/user
+cp -r ./mnt_sys/user ./mnt_rw/home/user || mkdir ./mnt_rw/home/user
 chown -R 1000:1000 ./mnt_rw/home/user
 mkdir -p ./mnt_rw/home/user/.ssh
 cp "$HOME/.ssh/$SSH_KEY.pub" ./mnt_rw/home/user/.ssh/authorized_keys
