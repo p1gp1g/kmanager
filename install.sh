@@ -21,7 +21,7 @@ mkdir -p "$SYS_DIR" "$RW_DIR" "$TEMPLATE_DIR"
 chattr -R +C "$SYS_DIR" "$RW_DIR" "$TEMPLATE_DIR" # disable CoW
 
 pstep "Initiating ssh key"
-[ -f "$HOME/.ssh/$SSH_KEY" ] || ssh-keygen -t ed25519 -N "" "$HOME/.ssh/$SSH_KEY"
+[ -f "$HOME/.ssh/$SSH_KEY" ] || ssh-keygen -t ed25519 -N "" -f "$HOME/.ssh/$SSH_KEY"
 
 pstep "Initiating database"
 SYS_TEMPLATE="template-$OS_VARIANT-$(date "+%Y-%m-%d_%H%M").qcow2"
