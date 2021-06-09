@@ -33,7 +33,8 @@ EOF
 
 pstep "Create template volumes"
 qemu-img create -f qcow2 "$TEMPLATE_DIR/$RW_TEMPLATE" $RW_SIZE
-qemu-img create -f qcow2 "$TEMPLATE_DIR/$SYS_TEMPLATE" $SYS_SIZE
+qemu-img create -f qcow2 "$TEMPLATE_DIR/empty.qcow2" $SYS_SIZE
+qemu-img create -f qcow2 -F qcow2 -b "$TEMPLATE_DIR/empty.qcow2" "$TEMPLATE_DIR/$SYS_TEMPLATE" $SYS_SIZE
 
 pstep "Format rw template volume"
 virt-format --filesystem=btrfs -a "$TEMPLATE_DIR/$RW_TEMPLATE"
