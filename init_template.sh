@@ -18,13 +18,7 @@ virt-sysprep -d template-$OS_VARIANT \
   --edit '/etc/sudoers:s/^%wheel\tALL=\(ALL\)\tALL$/# %wheel\tALL=\(ALL\)\tALL/' \
   --edit '/etc/sudoers:s/^# %wheel\tALL=\(ALL\)\tNOPASSWD: ALL$/%wheel\tALL=\(ALL\)\tNOPASSWD: ALL/' \
   --append-line "/etc/fstab:UUID=$RW_UUID /home                       btrfs   subvol=home,compress=zstd:1 0 0" \
-  --append-line "/etc/fstab:UUID=$RW_UUID /rw                         btrfs   subvol=rw,compress=zstd:1   0 0" \
-  --append-line "/etc/rc.d/rc.local:#!/bin/bash" \
-  --append-line "/etc/rc.d/rc.local:/usr/sbin/restorecon /home/user/.ssh/authorized_keys" \
-  --append-line "/etc/rc.d/rc.local:/usr/bin/systemctl enable --now sshd #1del" \
-  --append-line "/etc/rc.d/rc.local:[ -f /rw/firstboot.sh ] && /bin/bash /rw/firstboot.sh && /usr/bin/rm /rw/firstboot.sh #1del" \
-  --append-line "/etc/rc.d/rc.local:[ -f /rw/rc.local ] && /bin/bash /rw/rc.local" \
-  --append-line "/etc/rc.d/rc.local:sed -i '"'/#1del$/d'"' /etc/rc.d/rc.local #1del" \
+  --append-line "/etc/fstab:UUID=$RW_UUID /rw                         btrfs   subvol=rw,compress=zstd:1   0 0" 
 
 pstep "Undefining template-$OS_VARIANT"
 virsh undefine template-$OS_VARIANT
