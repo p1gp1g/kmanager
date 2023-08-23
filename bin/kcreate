@@ -36,7 +36,7 @@ virt-install --import --name $VM \
 virsh define $tmpfile || exit 1
 
 virt-xml $VM --edit --qemu-commandline="-netdev user,id=$VM,hostfwd=tcp:127.0.0.1:$PORT-:22" || exit 1
-virt-xml $VM --edit --qemu-commandline="-device virtio-net-pci,netdev=$VM" || exit 1
+virt-xml $VM --edit --qemu-commandline="-device virtio-net-pci,netdev=$VM,addr=0x11" || exit 1
 
 sqlite3 $DB "INSERT INTO vms(name,port) VALUES ('$VM',$PORT);" || exit 1
 
