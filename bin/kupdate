@@ -25,8 +25,11 @@ update() {
 run_update() {
 	kcreate update || exit 1
 	virsh start update || exit 1
+	echo ""
+	echo "[+] Updating"
 	ssh -t update sudo pacman -Syu || exit 1
 	ssh -t update yay -Syu || exit 1
+	echo ""
 	echo -n "Interactive shell ? (y/n)"
 	read shell
 	case $shell in
@@ -37,6 +40,8 @@ run_update() {
 			echo "Aborted"
 		;;
 	esac
+	echo ""
+	echo "[+] Post update commands"
 	ssh -t update paccache -rk0 || exit 1
 	virsh shutdown update
 	echo -n "Commit changes ? (y/n) "
